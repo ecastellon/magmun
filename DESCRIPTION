@@ -1,12 +1,13 @@
+-*- coding: utf-8 -*-
 Package: magmun
 Title: Departamentos y municipios
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Eddy",
-           family = "Castellón",
+           family = "CastellÃ³n",
            role = c("aut", "cre"),
            email = "eddy.castellon@mag.gob.ni",
-           comment = ""
+           comment = "")
 Description: Consultas y datos de los departamentos y municipios.
 License: MIT
 Encoding: UTF-8
