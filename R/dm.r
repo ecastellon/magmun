@@ -60,19 +60,34 @@ qry_dm <- function(qry = character(), dbf = character()) {
 }
 
 #' Departamentos
-#' @description devuelve data.frame con los códigos y nombres de los
-#'     departamentos
+#' @description Nombres de los departamentos
+#' @param codigos integer: códigos de los departamentos requeridos. Es
+#'     opcional. Si se omite se devuelven todos los nombres
+#' @param incod logical: incluir códigos en el resultado? FALSE por
+#'     omisión
 #' @param file character: ruta de la base de datos; si se omite, se
 #'     obtiene de la variable-ambiente DBDEPMUN
-#' @return data.frame o NULL
+#' @return NULL, data.frame o character
 #' @examples
-#' departamentos()
+#' departamentos(c(5, 50))
 #' @export
 #' @author eddy castellón
-departamentos <- function(file = character()) {
-    cc <- paste("select dpt, departamento",
+departamentos <- function(codigos = character(), incod = FALSE,
+                          file = character()) {
+    if (incod) {
+        ss <- "select dpt,"
+    } else {
+        ss <- "select "
+    }
+    
+    cc <- paste(ss,"departamento",
                 "from departamento",
                 "order by departamento")
+
+    if (filled(codigos)) {
+        cc <- paste(cc, "where dpt in(",
+                    paste(codigos, collapse = ","), ")")
+    }
 
     x <- qry_dm(cc, file)
 
@@ -99,6 +114,7 @@ municipios <- function(dpt = integer(), dbf = character()) {
                     "from municipio a, departamento b",
                     "where a.dpt = b.dpt",
                     "order by a.mun")
+
     } else {
         cc <- paste("select mun, municipio from municipio",
                     "where dpt in(",
@@ -109,6 +125,9 @@ municipios <- function(dpt = integer(), dbf = character()) {
     x <- qry_dm(cc, dbf)
 
     invisible(x)
+}
+
+estos_municipios <- function() {
 }
 
 #' Validar-Dpto-Muni
@@ -187,26 +206,25 @@ es_departamento <- function(x, dbf = character()) {
 #'     "replicado" tantas veces como sea necesario.
 #' @param dp integer: código del departamento
 #' @param mu integer: código del municipio
+#' @param validar logical: verificar resultado es código válido? FALSE
+#'     por omisión
 #' @param dbf character: ruta de la base de datos de municipios
 #' @return integer
 #' @seealso \code{municipios}
 #' @examples
-#' cod_dm(5, 5) #-> 505
-#' cod_dm(5, c(5, 20)) #-> c(505, 520)
+#' dptmun(5, 5) #-> 505
+#' dptmun(5, c(5, 20)) #-> c(505, 520)
 #' @export
 #' @author eddy castellón
-codex_mun <- function(dp = integer(), mu = integer(),
+dptmun <- function(dp = integer(), mu = integer(), validar = FALSE,
                       dbf = character()) {
     stopifnot(exprs = {
         filled_num(dp)
         filled_num(mu)
-        vapply(dp, num_entre, TRUE, 0, 100)
-        vapply(mu, num_entre, TRUE, 0, 100)
+        all(vapply(dp, num_entre, TRUE, 0, 100))
+        all(vapply(mu, num_entre, TRUE, 0, 100))
         is.character(dbf) })
 
-    dm <- municipios(dbf = dbf)
-    stopifnot(!is.null(dm))
-    
     nd <- length(dp)
     nm <- length(mu)
     if (nd > nm) {
@@ -218,12 +236,18 @@ codex_mun <- function(dp = integer(), mu = integer(),
     }
     mm <- mapply(concatenar_int, dp, mu, USE.NAMES = FALSE)
 
-    ii <- !es_dm(mm, dm)
+    if (validar) {
+        dm <- municipios(dbf = dbf)
+        if (is.null(dm)) {
+            warning("\n... imposible validar !!!", call. = FALSE)
+        } else {
+            ii <- !es_dm(mm, dm)
 
-    if (any(ii)) {
-        warning("\n...", sum(ii), " códigos inválidos", call. = FALSE)
-        mm[ii] <- NA_integer_
+            if (any(ii)) {
+                warning("\n...", sum(ii), " códigos inválidos", call. = FALSE)
+                mm[ii] <- NA_integer_
+            }
+        }
     }
-    
     mm
 }
