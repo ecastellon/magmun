@@ -65,15 +65,17 @@ qry_dm <- function(qry = character(), dbf = character()) {
 #'     opcional. Si se omite se devuelven todos los nombres
 #' @param incod logical: incluir códigos en el resultado? FALSE por
 #'     omisión
-#' @param file character: ruta de la base de datos; si se omite, se
+#' @param dbf character: ruta de la base de datos; si se omite, se
 #'     obtiene de la variable-ambiente DBDEPMUN
+#' @param locale logical: convierte al "encoding" local, los nombres
+#'     con encoding UTF-8; es TRUE por defecto
 #' @return NULL, data.frame o character
 #' @examples
 #' departamentos(c(5, 50))
 #' @export
 #' @author eddy castellón
-departamentos <- function(codigos = character(), incod = FALSE,
-                          file = character()) {
+departamentos <- function(codigos = numeric(), incod = FALSE,
+                          dbf = character(), locale = TRUE) {
     if (incod) {
         ss <- "select dpt,"
     } else {
@@ -84,13 +86,49 @@ departamentos <- function(codigos = character(), incod = FALSE,
                 "from departamento",
                 "order by departamento")
 
-    if (filled(codigos)) {
+    if (filled_num(codigos)) {
         cc <- paste(cc, "where dpt in(",
                     paste(codigos, collapse = ","), ")")
     }
 
-    x <- qry_dm(cc, file)
+    x <- qry_dm(cc, dbf)
+    if ( locale ) {
+        x["departamento"] <- iconv(x$departamento, "UTF-8", "")
+    }
 
+    invisible(x)
+}
+
+#' abr-departamento
+#' @description Abreviaturas de los departamentos
+#' @param codigos integer: códigos de los departamentos requeridos. Es
+#'     opcional. Si se omite se devuelven todas
+#' @param dbf character: ruta de la base de datos; si se omite, se
+#'     obtiene de la variable-ambiente DBDEPMUN
+#' @param iso logical: devolver abreviatura ISO?; FALSE por omisión
+#' @export
+#' @examples
+#' abr_departamentos(c(5, 50)) #-> "NS" "MG"
+#' abr_departamentos(c(5, 50), iso = TRUE) #-> "NI-NS", "NI-MN"
+abr_departamentos <- function(codigos = numeric(), dbf = character(),
+                              iso = FALSE) {
+
+    if ( iso ) {
+        ss <- "select iso"
+    } else {
+        ss <- "select abr"
+    }
+    
+    cc <- paste(ss,
+                "from departamento",
+                "order by dpt")
+
+    if (filled_num(codigos)) {
+        cc <- paste(cc, "where dpt in(",
+                    paste(codigos, collapse = ","), ")")
+    }
+
+    x <- qry_dm(cc, dbf)
     invisible(x)
 }
 
@@ -101,12 +139,15 @@ departamentos <- function(codigos = character(), incod = FALSE,
 #'     todos los municipios
 #' @param dbf character: ruta de la base de datos; si se omite, se
 #'     obtiene de la variable-ambiente DBDEPMUN
+#' @param locale logical: convierte al "encoding" local, los nombres
+#'     con encoding UTF-8; es TRUE por defecto
 #' @return data.frame o NULL
 #' @examples
 #' municipios()
 #' @export
 #' @author eddy castellón
-municipios <- function(dpt = integer(), dbf = character()) {
+municipios <- function(dpt = integer(), dbf = character(),
+                       locale = TRUE) {
     stopifnot("arg. dbf inadmisible" = is.character(dbf),
               "arg. dpt inadmisible" = is.numeric(dpt))
     if (is_vacuo(dpt)) {
@@ -114,7 +155,6 @@ municipios <- function(dpt = integer(), dbf = character()) {
                     "from municipio a, departamento b",
                     "where a.dpt = b.dpt",
                     "order by a.mun")
-
     } else {
         cc <- paste("select mun, municipio from municipio",
                     "where dpt in(",
@@ -123,6 +163,12 @@ municipios <- function(dpt = integer(), dbf = character()) {
     }
     
     x <- qry_dm(cc, dbf)
+    if ( locale ) {
+        x["municipio"] <- iconv(x$municipio, "UTF-8", "")
+        if ( is.element("departamento", names(x)) ) {
+            x["departamento"] <- iconv(x$departamento, "UTF-8", "")
+        }
+    }
 
     invisible(x)
 }
