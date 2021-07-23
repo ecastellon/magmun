@@ -63,23 +63,23 @@ qry_dm <- function(qry = character(), dbf = character()) {
 #' @description Nombres de los departamentos
 #' @param codigos integer: códigos de los departamentos requeridos. Es
 #'     opcional. Si se omite se devuelven todos los nombres
-#' @param incod logical: incluir códigos en el resultado? FALSE por
+#' @param inabr logical: incluir abreviatura en el resultado? TRUE por
 #'     omisión
 #' @param dbf character: ruta de la base de datos; si se omite, se
 #'     obtiene de la variable-ambiente DBDEPMUN
-#' @param locale logical: convierte al "encoding" local, los nombres
+#' @param locale logical: convierte al "encoding" local los nombres
 #'     con encoding UTF-8; es TRUE por defecto
-#' @return NULL, data.frame o character
+#' @return NULL, data.frame
 #' @examples
 #' departamentos(c(5, 50))
 #' @export
 #' @author eddy castellón
-departamentos <- function(codigos = numeric(), incod = FALSE,
+departamentos <- function(codigos = numeric(), inabr = TRUE,
                           dbf = character(), locale = TRUE) {
-    if (incod) {
-        ss <- "select dpt,"
+    if (inabr) {
+        ss <- "select dpt,abr,"
     } else {
-        ss <- "select "
+        ss <- "select dpt,"
     }
     
     cc <- paste(ss,"departamento",
@@ -106,17 +106,18 @@ departamentos <- function(codigos = numeric(), incod = FALSE,
 #' @param dbf character: ruta de la base de datos; si se omite, se
 #'     obtiene de la variable-ambiente DBDEPMUN
 #' @param iso logical: devolver abreviatura ISO?; FALSE por omisión
+#' @return data.frame
 #' @export
 #' @examples
-#' abr_departamentos(c(5, 50)) #-> "NS" "MG"
-#' abr_departamentos(c(5, 50), iso = TRUE) #-> "NI-NS", "NI-MN"
+#' abr_departamentos(c(5, 50))$abr #-> "NS" "MG"
+#' abr_departamentos(c(5, 50), iso = TRUE)$abr #-> "NI-NS", "NI-MN"
 abr_departamentos <- function(codigos = numeric(), dbf = character(),
                               iso = FALSE) {
 
     if ( iso ) {
-        ss <- "select iso"
+        ss <- "select dpt,iso as abr"
     } else {
-        ss <- "select abr"
+        ss <- "select dpt,abr"
     }
     
     cc <- paste(ss,
