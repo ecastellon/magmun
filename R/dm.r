@@ -83,13 +83,13 @@ departamentos <- function(codigos = numeric(), inabr = TRUE,
     }
     
     cc <- paste(ss,"departamento",
-                "from departamento",
-                "order by departamento")
+                "from departamento")
 
     if (filled_num(codigos)) {
         cc <- paste(cc, "where dpt in(",
                     paste(codigos, collapse = ","), ")")
     }
+    cc <- paste(cc, "order by departamento")
 
     x <- qry_dm(cc, dbf)
     if ( locale ) {
@@ -172,9 +172,6 @@ municipios <- function(dpt = integer(), dbf = character(),
     }
 
     invisible(x)
-}
-
-estos_municipios <- function() {
 }
 
 #' Validar-Dpto-Muni
