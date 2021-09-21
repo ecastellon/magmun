@@ -222,7 +222,7 @@ es_municipio <- function(x, dbf = character()) {
     stopifnot("arg. x inadmisible" = filled_num(x) || filled_char(x),
               "arg. dbf inadmisible" = is.character(dbf))
 
-    es_dm(x, municipios(dbf))
+    es_dm(x, municipios(dbf = dbf))
 }
 
 #' Departamento-válido
